@@ -7,21 +7,25 @@ import vsl.plot
 // the ML module imports the plot module.
 
 // to_plot returns the scatter plot of the fitted K-means model.
-pub fn (o &Kmeans) to_plot() &plot.Plot {
-	return o.get_plotter()
+pub fn (o Kmeans) to_plot() &plot.Plot {
+	mut m := o
+	return m.get_plotter()
 }
 
 // to_plot returns the plot of the fitted KNN model.
-pub fn (o &KNN) to_plot() &plot.Plot {
-	return o.get_plotter()
+pub fn (o KNN) to_plot() &plot.Plot {
+	mut m := o
+	return m.get_plotter()
 }
 
 // to_plot returns the data and fitted line for the regression model.
-pub fn (o &LinReg) to_plot() &plot.Plot {
-	return o.get_plotter()
+pub fn (o LinReg) to_plot() &plot.Plot {
+	mut m := o
+	return m.get_plotter()
 }
 
 // to_plot returns the data and decision boundary for the classifier.
-pub fn (o &LogReg) to_plot() &plot.Plot {
-	return o.get_plotter()
+pub fn (o LogReg) to_plot() &plot.Plot {
+	mut m := o
+	return m.get_plotter()
 }

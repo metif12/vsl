@@ -6,7 +6,7 @@ import vsl.plot
 // the first two vertex coordinates are used. Vertices with fewer than two
 // coordinates and edges that reference missing vertices are skipped. Calling
 // this method never opens a browser or writes a file.
-pub fn (g &Graph) to_plot() &plot.Plot {
+pub fn (g Graph) to_plot() &plot.Plot {
 	mut plt := plot.Plot.new()
 	plt.layout(title: 'Graph')
 
