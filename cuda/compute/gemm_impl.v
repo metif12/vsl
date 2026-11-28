@@ -21,7 +21,7 @@ mut:
 	padded_rows int
 	padded_cols int
 	device_id   int
-	data GpuBuf
+	data        GpuBuf
 }
 
 // gpu_buf_new allocates count * sizeof(T) bytes on the GPU.
