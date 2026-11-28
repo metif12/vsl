@@ -38,7 +38,8 @@ fn hessian_finite_denominator(value f64) bool {
 // uses h * max(1, abs(x[i])) as its initial step.
 //
 // Diagonal entries use the second-order central stencil
-// (f(x+s) - 2 f(x) + f(x-s)) / s^2 and off-diagonal entries use the mixed
+// (f(x+s) - 2 f(x) + f(x-s)) / s^2, evaluated as (f(x+s) - f(x)) + (f(x-s) - f(x))
+// so a large finite baseline is never doubled. Off-diagonal entries use the mixed
 // four-point stencil. Each entry is computed at s and s/2 and refined with
 // Richardson extrapolation; the difference between the two estimates supplies
 // the per-entry error estimate. The returned matrices are symmetric: only the
@@ -99,8 +100,10 @@ pub fn hessian(f fn ([]f64) f64, x []f64, h f64) !HessianResult {
 		}
 		evaluations++
 
-		large := (large_plus - 2.0 * base + large_minus) / (si * si)
-		small := (small_plus - 2.0 * base + small_minus) / (hi * hi)
+		// Difference against the baseline first: 2 * base can overflow for a
+		// large finite offset even when the centered second difference is finite.
+		large := ((large_plus - base) + (large_minus - base)) / (si * si)
+		small := ((small_plus - base) + (small_minus - base)) / (hi * hi)
 		value, estimate := hessian_refine(large, small)
 		if !finite_deriv_value(value) || !finite_deriv_value(estimate) {
 			return errors.error('Hessian estimate is not finite', .ebadfunc)

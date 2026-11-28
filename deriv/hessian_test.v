@@ -14,6 +14,12 @@ fn hessian_test_cubic(x []f64) f64 {
 	return x[0] * x[0] * x[0]
 }
 
+// A huge but finite offset makes 2 * f(x) overflow, while increments of the
+// quadratic term at step 1e148 remain representable.
+fn hessian_test_huge_offset(x []f64) f64 {
+	return 1.5e308 + x[0] * x[0]
+}
+
 fn hessian_test_non_finite_value(_ []f64) f64 {
 	return math.nan()
 }
@@ -74,6 +80,12 @@ fn test_hessian_single_coordinate() {
 	assert result.values[0].len == 1
 	assert result.evaluations == 5
 	assert math.abs(result.values[0][0] - 12.0) < 1e-6
+}
+
+fn test_hessian_large_offset_does_not_overflow_diagonal() {
+	result := hessian(hessian_test_huge_offset, [1.0], 1e148)!
+	assert math.abs(result.values[0][0] - 2.0) < 1e-2
+	assert result.error_estimate[0][0] >= 0.0
 }
 
 fn test_hessian_rejects_empty_input() {
