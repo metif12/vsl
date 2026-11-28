@@ -158,8 +158,11 @@ pub fn hessian(f fn ([]f64) f64, x []f64, h f64) !HessianResult {
 			}
 			evaluations++
 
-			large := (large_pp - large_pm - large_mp + large_mm) / large_denom
-			small := (small_pp - small_pm - small_mp + small_mm) / small_denom
+			// Difference each pair before combining: the four corner values share
+			// one large baseline, so their raw sum can overflow even when the
+			// mixed difference itself is finite.
+			large := (large_pp - large_pm) / large_denom - (large_mp - large_mm) / large_denom
+			small := (small_pp - small_pm) / small_denom - (small_mp - small_mm) / small_denom
 			value, estimate := hessian_refine(large, small)
 			if !finite_deriv_value(value) || !finite_deriv_value(estimate) {
 				return errors.error('Hessian estimate is not finite', .ebadfunc)
@@ -181,7 +184,10 @@ pub fn hessian(f fn ([]f64) f64, x []f64, h f64) !HessianResult {
 fn hessian_refine(large f64, small f64) (f64, f64) {
 	// Both stencils have O(h^2) truncation error, so halving the step quarters
 	// the leading error term and Richardson removes it to O(h^4).
-	value := (4.0 * small - large) / 3.0
+	// Add the correction to the fine estimate instead of scaling the fine
+	// values up first: 4 * small can overflow for a large finite result
+	// even when the extrapolated value is representable.
+	value := small + (small - large) / 3.0
 	estimate := math.abs(small - large) / 3.0
 	return value, estimate
 }

@@ -20,6 +20,19 @@ fn hessian_test_huge_offset(x []f64) f64 {
 	return 1.5e308 + x[0] * x[0]
 }
 
+// A huge but finite curvature makes 4 * small overflow, while the
+// extrapolated Richardson value stays representable.
+fn hessian_test_huge_curvature(x []f64) f64 {
+	return 2.5e307 * x[0] * x[0]
+}
+
+// A huge but finite offset on a function with a nonzero mixed partial: the
+// raw four-corner sum would overflow, while each paired difference stays
+// representable.
+fn hessian_test_huge_offset_mixed(x []f64) f64 {
+	return 1.5e308 + x[0] * x[1]
+}
+
 fn hessian_test_non_finite_value(_ []f64) f64 {
 	return math.nan()
 }
@@ -85,6 +98,21 @@ fn test_hessian_single_coordinate() {
 fn test_hessian_large_offset_does_not_overflow_diagonal() {
 	result := hessian(hessian_test_huge_offset, [1.0], 1e148)!
 	assert math.abs(result.values[0][0] - 2.0) < 1e-2
+	assert result.error_estimate[0][0] >= 0.0
+}
+
+fn test_hessian_large_offset_does_not_overflow_mixed() {
+	// Huge steps keep the bilinear variation representable against the
+	// offset: with tiny steps every corner would round to the offset.
+	result := hessian(hessian_test_huge_offset_mixed, [f64(1.0), 2.0], 1e148)!
+	assert math.abs(result.values[0][1] - 1.0) < 1e-2
+	assert math.abs(result.values[1][0] - 1.0) < 1e-2
+	assert result.error_estimate[0][1] >= 0.0
+}
+
+fn test_hessian_huge_curvature_does_not_overflow_richardson() {
+	result := hessian(hessian_test_huge_curvature, [1.0], 1e-3)!
+	assert math.abs(result.values[0][0] / 5e307 - 1.0) < 1e-6
 	assert result.error_estimate[0][0] >= 0.0
 }
 
